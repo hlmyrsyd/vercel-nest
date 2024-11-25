@@ -19,19 +19,26 @@ export class ConsultationHistoryController {
     @ApiResponse({ status: 201, description: 'Consultation history created.', type: ConsultationHistory })
     @Post()
     create(@Body() createConsultationHistoryDto: CreateConsultationHistoryDto) {
-        const newConsultationHistory: ConsultationHistory = {
+    const newConsultationHistory: ConsultationHistory = {
         id: crypto.randomUUID(),
         ...createConsultationHistoryDto,
         consultationData: [],
-        };
-        this.consultationHistories.push(newConsultationHistory);
-        return newConsultationHistory;
+    };
+    this.consultationHistories.push(newConsultationHistory);
+    return newConsultationHistory;
     }
+
 
     @ApiOperation({ summary: 'Get consultation history by ID' })
     @ApiResponse({ status: 200, description: 'Consultation history found.', type: ConsultationHistory })
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.consultationHistories.find((history) => history.id === id);
+    @Get(':patientId')
+    findByPatientId(@Param('patientId') patientId: string) {
+        const consultations = this.consultationHistories.filter(
+            (history) => history.patientId === patientId,
+        );
+        if (consultations.length === 0) {
+            return { message: `No consultations found for patient ID ${patientId}.` };
+        }
+        return consultations;
     }
 }
