@@ -10,5 +10,4 @@ export class ConsultationData {
     opinion: string[];
     anxiety: string[];
     pain: string[];
-    consultation: ConsultationHistory;
 }

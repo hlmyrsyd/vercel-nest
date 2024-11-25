@@ -21,8 +21,7 @@ export class ConsultationDataController {
     create(@Body() createConsultationDataDto: CreateConsultationDataDto) {
         const newConsultationData: ConsultationData = {
         id: crypto.randomUUID(),
-        ...createConsultationDataDto,
-        consultation: null, // This will be filled later with the corresponding consultation history
+        ...createConsultationDataDto
         };
         this.consultationData.push(newConsultationData);
         return newConsultationData;
@@ -30,8 +29,16 @@ export class ConsultationDataController {
 
     @ApiOperation({ summary: 'Get consultation data by ID' })
     @ApiResponse({ status: 200, description: 'Consultation data found.', type: ConsultationData })
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.consultationData.find((data) => data.id === id);
+    @Get(':consultationHistoryId')
+    findByConsultationHistoryId(@Param('consultationHistoryId') consultationHistoryId: string) {
+        const data = this.consultationData.filter(
+            ( data) => data.consultationId === consultationHistoryId,
+        );
+        if (data.length === 0) {
+            return {
+            message: `No consultation data found for Consultation History ID ${consultationHistoryId}.`,
+            };
+        }
+        return data;
     }
 }
