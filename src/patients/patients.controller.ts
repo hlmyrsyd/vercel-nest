@@ -1,49 +1,88 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Patient } from './patient.model';
 
-// Mock data structure for a Patient
-class Patient {
-    id: number;
-    name: string;
-    age: number;
-    condition: string;
-}
-
-@ApiTags('patients') // Swagger tag
+@ApiTags('patients')
 @Controller('patients')
 export class PatientsController {
-    private patients: Patient[] = [
-        { id: 1, name: 'John Doe', age: 30, condition: 'Flu' },
-        { id: 2, name: 'Jane Doe', age: 25, condition: 'Cold' },
-    ];
+    private patients: Patient[] = [];
 
+    @ApiOperation({ summary: 'Retrieve all patients' })
+    @ApiResponse({
+        status: 200,
+        description: 'List of all patients',
+        type: Patient,
+        isArray: true,
+    })
     @Get()
     findAll() {
         return this.patients;
     }
 
+    @ApiOperation({ summary: 'Create a new patient' })
+    @ApiResponse({
+        status: 201,
+        description: 'The patient has been successfully created.',
+        type: Patient,
+    })
+    @ApiResponse({ status: 400, description: 'Invalid input.' })
     @Post()
-    create(@Body() patient: Patient) {
-        const newPatient = { ...patient, id: this.patients.length + 1 };
+    create(@Body() patient: Partial<Patient>) {
+        const requiredFields = ['name', 'gender', 'dob', 'age', 'status'];
+        for (const field of requiredFields) {
+            if (!patient[field]) {
+                throw new BadRequestException(`${field} is required.`);
+            }
+        }
+
+        const newPatient = {
+            ...patient,
+            id: crypto.randomUUID(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            diseaseHistory: patient.diseaseHistory || [],
+            laborHistory: patient.laborHistory || [],
+            breastfeedHistory: patient.breastfeedHistory || [],
+            consultations: [],
+        } as Patient;
+
         this.patients.push(newPatient);
         return newPatient;
     }
 
+    @ApiOperation({ summary: 'Update an existing patient' })
+    @ApiResponse({
+        status: 200,
+        description: 'The patient has been successfully updated.',
+        type: Patient,
+    })
+    @ApiResponse({ status: 404, description: 'Patient not found.' })
     @Put(':id')
-    update(@Param('id') id: number, @Body() patient: Partial<Patient>) {
-        const index = this.patients.findIndex((p) => p.id === +id);
-        if (index === -1) {
-        return { message: `Patient with ID ${id} not found.` };
+    update(@Param('id') id: string, @Body() patient: Partial<Patient>) {
+        const index = this.patients.findIndex((p) => p.id === id);
+            if (index === -1) {
+            throw new BadRequestException(`Patient with ID ${id} not found.`);
         }
-        this.patients[index] = { ...this.patients[index], ...patient };
+
+        this.patients[index] = {
+            ...this.patients[index],
+            ...patient,
+            updatedAt: new Date(),
+        };
         return this.patients[index];
     }
 
+    @ApiOperation({ summary: 'Remove a patient' })
+    @ApiResponse({
+        status: 200,
+        description: 'The patient has been successfully removed.',
+    })
+    @ApiResponse({ status: 404, description: 'Patient not found.' })
     @Delete(':id')
-    remove(@Param('id') id: number) {
-        const index = this.patients.findIndex((p) => p.id === +id);
+    remove(@Param('id') id: string) {
+        const index = this.patients.findIndex((p) => p.id === id);
         if (index === -1) {
-        return { message: `Patient with ID ${id} not found.` };
+            throw new BadRequestException(`Patient with ID ${id} not found.`);
         }
         const removed = this.patients.splice(index, 1);
         return { message: 'Patient removed', removed };
