@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreatePatientDto } from './dto/create-patient.dto';
 import { Patient } from './patient.model';
 
 @ApiTags('patients')
@@ -27,25 +28,15 @@ export class PatientsController {
     })
     @ApiResponse({ status: 400, description: 'Invalid input.' })
     @Post()
-    create(@Body() patient: Partial<Patient>) {
-        const requiredFields = ['name', 'gender', 'dob', 'age', 'status'];
-        for (const field of requiredFields) {
-            if (!patient[field]) {
-                throw new BadRequestException(`${field} is required.`);
-            }
-        }
-
+    create(@Body() createPatientDto: CreatePatientDto) {
         const newPatient = {
-            ...patient,
+            ...createPatientDto,
             id: crypto.randomUUID(),
             createdAt: new Date(),
             updatedAt: new Date(),
-            diseaseHistory: patient.diseaseHistory || [],
-            laborHistory: patient.laborHistory || [],
-            breastfeedHistory: patient.breastfeedHistory || [],
             consultations: [],
         } as Patient;
-
+    
         this.patients.push(newPatient);
         return newPatient;
     }
