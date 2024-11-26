@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Param } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Delete, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConsultationData } from './consultationData.model';
 import { CreateConsultationDataDto } from './dto/create-consultationData.dto';
@@ -40,5 +40,40 @@ export class ConsultationDataController {
             };
         }
         return data;
+    }
+
+    @ApiOperation({ summary: 'Update consultation data by ID' })
+    @ApiResponse({ status: 200, description: 'Consultation data updated.', type: ConsultationData })
+    @Put(':consultationHistoryId')
+    update(@Param('consultationHistoryId') consultationHistoryId: string, @Body() updateDto: Partial<CreateConsultationDataDto>) {
+        const index = this.consultationData.findIndex(
+            (data) => data.consultationId === consultationHistoryId);
+        if (index === -1) {
+            return { message: `Consultation data with ID ${consultationHistoryId} not found.` };
+        }
+
+        this.consultationData[index] = {
+            ...this.consultationData[index],
+            ...updateDto,
+        };
+
+        return this.consultationData[index];
+    }
+
+    @ApiOperation({ summary: 'Delete consultation data by ID' })
+    @ApiResponse({ status: 200, description: 'Consultation data deleted.' })
+    @Delete(':consultationHistoryId')
+    delete(@Param('consultationHistoryId') consultationHistoryId: string) {
+        const index = this.consultationData.findIndex(
+            (data) => data.consultationId === consultationHistoryId);
+        if (index === -1) {
+            return { message: `Consultation data with ID ${consultationHistoryId} not found.` };
+        }
+
+        const deletedData = this.consultationData.splice(index, 1);
+        return {
+            message: `Consultation data with ID ${consultationHistoryId} deleted successfully.`,
+            deletedData: deletedData[0],
+        };
     }
 }
