@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Param } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Put, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConsultationData } from 'src/consulationData/consultationData.model';
 import { ConsultationHistory } from './consultationHistory.model';
@@ -53,7 +53,7 @@ export class ConsultationHistoryController {
     })
     @Get(':patientId')
     findByPatientId(@Param('patientId') patientId: string) {
-    const consultations = this.consultationHistories
+        const consultations = this.consultationHistories
         .filter((history) => history.patientId === patientId)
         .map((history) => {
             const matchedData = this.consultationData.filter(
@@ -67,9 +67,48 @@ export class ConsultationHistoryController {
             };
         });
 
-    if (consultations.length === 0) {
-        return { message: `No consultations found for patient ID ${patientId}.` };
+        if (consultations.length === 0) {
+            return { message: `No consultations found for patient ID ${patientId}.` };
+        }
+        return consultations;
     }
-    return consultations;
-}
+
+    @ApiOperation({ summary: 'Update a consultation history' })
+    @ApiResponse({
+        status: 200,
+        description: 'Consultation history updated.',
+        type: ConsultationHistory,
+    })
+    @Put(':patientId')
+    update(@Param('patientId') patientId: string, @Body() updateDto: Partial<CreateConsultationHistoryDto>) {
+        const index = this.consultationHistories.findIndex(
+            (history) => history.patientId === patientId);
+        if (index === -1) {
+            return { message: `Consultation history with patientId ${patientId} not found.` };
+        }
+
+        const currentHistory = this.consultationHistories[index];
+        this.consultationHistories[index] = {
+            ...currentHistory,
+            ...updateDto,
+        };
+
+        return this.consultationHistories[index];
+    }
+
+    @ApiOperation({ summary: 'Delete a consultation history by ID' })
+    @ApiResponse({
+        status: 200,
+        description: 'Consultation history deleted.',
+    })
+    @Delete(':patientId')
+    delete(@Param('patientId') patientId: string) {
+        const index = this.consultationHistories.findIndex((history) => history.patientId === patientId);
+        if (index === -1) {
+            return { message: `Consultation history with patientId ${patientId} not found.` };
+        }
+
+        this.consultationHistories.splice(index, 1);
+        return { message: `Consultation history with patientId ${patientId} has been deleted.` };
+    }
 }
