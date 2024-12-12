@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { Patient } from './patient.model';
@@ -18,6 +18,22 @@ export class PatientsController {
     @Get()
     findAll() {
         return this.patients;
+    }
+
+    @ApiOperation({ summary: 'Retrieve a patient by ID' })
+    @ApiResponse({
+        status: 200,
+        description: 'The patient with the specified ID',
+        type: Patient,
+    })
+    @ApiResponse({ status: 404, description: 'Patient not found.' })
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        const patient = this.patients.find((p) => p.id === id);
+        if (!patient) {
+            throw new NotFoundException(`Patient with ID ${id} not found.`);
+        }
+        return patient;
     }
 
     @ApiOperation({ summary: 'Create a new patient' })
