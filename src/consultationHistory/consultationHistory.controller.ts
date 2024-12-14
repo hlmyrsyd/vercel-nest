@@ -8,22 +8,22 @@ import { CreateConsultationHistoryDto } from './dto/create-consultationHistory.d
 @Controller('consultation-history')
 export class ConsultationHistoryController {
     private consultationHistories: ConsultationHistory[] = [];
-    private consultationData: ConsultationData[] = []; 
+    private consultationData: ConsultationData[] = []; // Mock data store for consultation data
 
-    @ApiOperation({ summary: 'Get all consultation histories' })
+    @ApiOperation({ summary: 'Get all consultation histories with consultation data' })
     @ApiResponse({
         status: 200,
-        description: 'List of consultation histories.',
+        description: 'List of consultation histories with detailed data.',
         type: ConsultationHistory,
         isArray: true,
     })
     @Get()
     findAll() {
         return this.consultationHistories.map((history) => ({
-        ...history,
-        consultationData: this.consultationData.filter(
-            (data) => data.consultationId === history.id,
-        ),
+            ...history,
+            consultationData: this.consultationData.filter(
+                (data) => data.consultationId === history.id,
+            ),
         }));
     }
 
@@ -36,36 +36,34 @@ export class ConsultationHistoryController {
     @Post()
     create(@Body() createConsultationHistoryDto: CreateConsultationHistoryDto) {
         const newConsultationHistory: ConsultationHistory = {
-        id: crypto.randomUUID(),
-        ...createConsultationHistoryDto,
-        consultationData: [],
+            id: crypto.randomUUID(),
+            ...createConsultationHistoryDto,
+            consultationData: [],
         };
         this.consultationHistories.push(newConsultationHistory);
         return newConsultationHistory;
     }
 
-    @ApiOperation({ summary: 'Get consultation history by Patient ID' })
+    @ApiOperation({ summary: 'Get consultation history by patient ID with detailed data' })
     @ApiResponse({
         status: 200,
-        description: 'Consultation history for a patient found.',
+        description: 'Consultation history for a patient with detailed data.',
         type: ConsultationHistory,
         isArray: true,
     })
     @Get(':patientId')
     findByPatientId(@Param('patientId') patientId: string) {
         const consultations = this.consultationHistories
-        .filter((history) => history.patientId === patientId)
-        .map((history) => {
-            const matchedData = this.consultationData.filter(
-                (data) => data.consultationId === history.id,
-            );
-            console.log(`History ID: ${history.id}, Matched Data:`, matchedData);
-
-            return {
-                ...history,
-                consultationData: matchedData,
-            };
-        });
+            .filter((history) => history.patientId === patientId)
+            .map((history) => {
+                const matchedData = this.consultationData.filter(
+                    (data) => data.consultationId === history.id,
+                );
+                return {
+                    ...history,
+                    consultationData: matchedData,
+                };
+            });
 
         if (consultations.length === 0) {
             return { message: `No consultations found for patient ID ${patientId}.` };
@@ -82,7 +80,8 @@ export class ConsultationHistoryController {
     @Put(':patientId')
     update(@Param('patientId') patientId: string, @Body() updateDto: Partial<CreateConsultationHistoryDto>) {
         const index = this.consultationHistories.findIndex(
-            (history) => history.patientId === patientId);
+            (history) => history.patientId === patientId,
+        );
         if (index === -1) {
             return { message: `Consultation history with patientId ${patientId} not found.` };
         }
@@ -96,14 +95,16 @@ export class ConsultationHistoryController {
         return this.consultationHistories[index];
     }
 
-    @ApiOperation({ summary: 'Delete a consultation history by ID' })
+    @ApiOperation({ summary: 'Delete a consultation history by patient ID' })
     @ApiResponse({
         status: 200,
         description: 'Consultation history deleted.',
     })
     @Delete(':patientId')
     delete(@Param('patientId') patientId: string) {
-        const index = this.consultationHistories.findIndex((history) => history.patientId === patientId);
+        const index = this.consultationHistories.findIndex(
+            (history) => history.patientId === patientId,
+        );
         if (index === -1) {
             return { message: `Consultation history with patientId ${patientId} not found.` };
         }

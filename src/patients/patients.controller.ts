@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ConsultationHistory } from 'src/consultationHistory/consultationHistory.model';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { Patient } from './patient.model';
 
@@ -7,6 +8,7 @@ import { Patient } from './patient.model';
 @Controller('patients')
 export class PatientsController {
     private patients: Patient[] = [];
+    private consultationHistories: ConsultationHistory[] = [];
 
     @ApiOperation({ summary: 'Retrieve all patients' })
     @ApiResponse({
@@ -16,8 +18,14 @@ export class PatientsController {
         isArray: true,
     })
     @Get()
-    findAll() {
-        return this.patients;
+    async findAll() {
+        return this.patients.map((patient) => {
+            const consultations = this.consultationHistories
+                .filter((ch) => ch.patientId === patient.id)
+                .map((ch) => ch.id); // Get only the consultation IDs
+
+            return { ...patient, consultations };
+        });
     }
 
     @ApiOperation({ summary: 'Retrieve a patient by ID' })
