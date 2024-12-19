@@ -95,21 +95,21 @@ export class ConsultationHistoryController {
         return this.consultationHistories[index];
     }
 
-    @ApiOperation({ summary: 'Delete a consultation history by patient ID' })
+    @ApiOperation({ summary: 'Delete a consultation history by Consultation History Id' })
     @ApiResponse({
         status: 200,
         description: 'Consultation history deleted.',
     })
-    @Delete(':patientId')
-    delete(@Param('patientId') patientId: string) {
+    @Delete(':id')
+    delete(@Param('id') id: string) {
         const index = this.consultationHistories.findIndex(
-            (history) => history.patientId === patientId,
+            (history) => history.id === id,
         );
         if (index === -1) {
-            return { message: `Consultation history with patientId ${patientId} not found.` };
+            return { message: `Consultation history with patientId ${id} not found.` };
         }
 
         this.consultationHistories.splice(index, 1);
-        return { message: `Consultation history with patientId ${patientId} has been deleted.` };
+        return { message: `Consultation history with patientId ${id} has been deleted.` };
     }
 }
